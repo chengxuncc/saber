@@ -1,33 +1,49 @@
 package saber
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/chengxuncc/saber/internal/x"
 )
 
-type Command func(c *Compound) error
+type CommandCall func(c *Command) error
+
+type Command struct {
+	Stdin  io.ReadCloser
+	Stdout io.WriteCloser
+	Stderr io.WriteCloser
+	Call   func(c *Command) error
+}
 
 type Compound struct {
 	Script   *Script
-	Stdin    io.Reader
-	Stdout   io.Writer
-	Stderr   io.Writer
-	Commands []Command
+	Commands []*Command
 }
 
 func Do() *Compound {
 	return &Compound{
-		Commands: make([]Command, 0, 3),
+		Commands: make([]*Command, 0, 3),
 	}
+}
+
+func (c *Compound) Do() *Command {
+	cmd := &Command{}
+	if len(c.Commands) > 0 {
+		lastCmd := c.Commands[len(c.Commands)-1]
+		if lastCmd.Stdout == nil {
+			cmd.Stdin, lastCmd.Stdout = io.Pipe()
+		}
+	}
+	c.Commands = append(c.Commands, cmd)
+	return cmd
 }
 
 func (c *Compound) Run() {
 	err := c.ErrorRun()
 	if err != nil {
-		fmt.Println(err)
+		x.Must(fmt.Fprintln(os.Stderr, err))
 		if c.Script.ExitOnError {
 			os.Exit(1)
 		}
@@ -38,12 +54,22 @@ func (c *Compound) ErrorRun() error {
 	if c.Script == nil {
 		c.Script = Main
 	}
-	if c.Stdout == nil {
-		c.Stdout = os.Stdout
-	}
-	for i := 0; i < len(c.Commands); i++ {
+	count := len(c.Commands)
+	errs := make(chan error, count)
+	for i := 0; i < count; i++ {
 		cmd := c.Commands[i]
-		err := cmd(c)
+		if cmd.Stdout == nil {
+			cmd.Stdout = os.Stdout
+		}
+		go func() {
+			errs <- cmd.Call(cmd)
+			if cmd.Stdout != os.Stdout {
+				_ = cmd.Stdout.Close()
+			}
+		}()
+	}
+	for i := 0; i < count; i++ {
+		err := <-errs
 		if err != nil {
 			return err
 		}
@@ -54,7 +80,7 @@ func (c *Compound) ErrorRun() error {
 func (c *Compound) Output() string {
 	res, err := c.ErrorOutput()
 	if err != nil {
-		fmt.Println(err)
+		x.Must(fmt.Fprintln(os.Stderr, err))
 		if c.Script.ExitOnError {
 			os.Exit(1)
 		}
@@ -63,11 +89,11 @@ func (c *Compound) Output() string {
 }
 
 func (c *Compound) ErrorOutput() (string, error) {
-	if c.Stdout != nil {
-		return "", errors.New("saber: Stdout already set")
+	out := &x.Buffer{}
+	cmdCount := len(c.Commands)
+	if cmdCount > 0 {
+		c.Commands[cmdCount-1].Stdout = out
 	}
-	out := &bytes.Buffer{}
-	c.Stdout = out
 	err := c.ErrorRun()
 	return out.String(), err
 }

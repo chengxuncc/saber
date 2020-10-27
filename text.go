@@ -2,6 +2,7 @@ package saber
 
 import (
 	"fmt"
+	"io"
 )
 
 func Print(a ...interface{}) *Compound {
@@ -9,24 +10,32 @@ func Print(a ...interface{}) *Compound {
 }
 
 func (c *Compound) Print(a ...interface{}) *Compound {
-	c.Commands = append(c.Commands,
-		func(c *Compound) error {
-			_, err := fmt.Fprint(c.Stdout, a...)
+	cmd := c.Do()
+	cmd.Call = func(c *Command) error {
+		_, err := io.Copy(c.Stdout, c.Stdin)
+		if err != nil {
 			return err
-		})
+		}
+		_, err = fmt.Fprint(c.Stdout, a...)
+		return err
+	}
 	return c
 }
 
 func Println(a ...interface{}) *Compound {
-	return Do().Print(a...)
+	return Do().Println(a...)
 }
 
 func (c *Compound) Println(a ...interface{}) *Compound {
-	c.Commands = append(c.Commands,
-		func(c *Compound) error {
-			_, err := fmt.Fprintln(c.Stdout, a...)
+	cmd := c.Do()
+	cmd.Call = func(c *Command) error {
+		_, err := io.Copy(c.Stdout, c.Stdin)
+		if err != nil {
 			return err
-		})
+		}
+		_, err = fmt.Fprintln(c.Stdout, a...)
+		return err
+	}
 	return c
 }
 
@@ -35,10 +44,15 @@ func Printf(format string, a ...interface{}) *Compound {
 }
 
 func (c *Compound) Printf(format string, a ...interface{}) *Compound {
-	c.Commands = append(c.Commands,
-		func(c *Compound) error {
-			_, err := fmt.Fprintf(c.Stdout, format, a...)
+	cmd := c.Do()
+	cmd.Call = func(c *Command) error {
+		_, err := io.Copy(c.Stdout, c.Stdin)
+		if err != nil {
 			return err
-		})
+		}
+
+		_, err = fmt.Fprintf(c.Stdout, format, a...)
+		return err
+	}
 	return c
 }
