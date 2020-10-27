@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	PWD().Run()
+	Pwd().Run()
 }

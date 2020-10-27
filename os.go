@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func PWD() *Compound {
+func Pwd() *Compound {
 	return Do().PWD()
 }
 
