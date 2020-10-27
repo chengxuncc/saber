@@ -10,15 +10,14 @@ func Pwd() *Compound {
 }
 
 func (c *Compound) Pwd() *Compound {
-	c.Commands = append(c.Commands, &Command{
-		Call: func(c *Command) error {
+	c.Commands = append(c.Commands,
+		func(c *Compound) error {
 			wd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 			_, err = fmt.Fprint(c.Stdout, wd)
 			return err
-		},
-	})
+		})
 	return c
 }

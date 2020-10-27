@@ -2,19 +2,25 @@ package saber
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 )
 
+type Command func(c *Compound) error
+
 type Compound struct {
 	Script   *Script
-	Commands []*Command
+	Stdin    io.Reader
+	Stdout   io.Writer
+	Stderr   io.Writer
+	Commands []Command
 }
 
 func Do() *Compound {
 	return &Compound{
-		Commands: make([]*Command, 0, 3),
+		Commands: make([]Command, 0, 3),
 	}
 }
 
@@ -32,21 +38,12 @@ func (c *Compound) ErrorRun() error {
 	if c.Script == nil {
 		c.Script = Main
 	}
-	// pipe
-	for i := 1; i < len(c.Commands); i++ {
-		lastOut := c.Commands[i-1].Stdout
-		lastReader, ok := lastOut.(io.Reader)
-		if ok {
-			c.Commands[i].Stdin = lastReader
-		}
-	}
-	lastCmd := c.Commands[len(c.Commands)-1]
-	if lastCmd.Stdout == nil {
-		lastCmd.Stdout = os.Stdout
+	if c.Stdout == nil {
+		c.Stdout = os.Stdout
 	}
 	for i := 0; i < len(c.Commands); i++ {
 		cmd := c.Commands[i]
-		err := cmd.Call(cmd)
+		err := cmd(c)
 		if err != nil {
 			return err
 		}
@@ -66,8 +63,11 @@ func (c *Compound) Output() string {
 }
 
 func (c *Compound) ErrorOutput() (string, error) {
+	if c.Stdout != nil {
+		return "", errors.New("saber: Stdout already set")
+	}
 	out := &bytes.Buffer{}
-	c.Commands[len(c.Commands)-1].Stdout = out
+	c.Stdout = out
 	err := c.ErrorRun()
 	return out.String(), err
 }
