@@ -6,10 +6,10 @@ import (
 )
 
 func Pwd() *Compound {
-	return Do().PWD()
+	return Do().Pwd()
 }
 
-func (c *Compound) PWD() *Compound {
+func (c *Compound) Pwd() *Compound {
 	c.Commands = append(c.Commands, &Command{
 		Call: func(c *Command) error {
 			wd, err := os.Getwd()
