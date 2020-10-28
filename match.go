@@ -30,15 +30,11 @@ func (c *Compound) Grep(sub string) *Compound {
 	})
 }
 
-func Regex(expr string, replace ...string) *Compound {
-	return Do().Regex(expr, replace...)
+func Match(expr string) *Compound {
+	return Do().Match(expr)
 }
 
-func (c *Compound) Regex(expr string, replace ...string) *Compound {
-	var repl string
-	if len(replace) > 0 {
-		repl = replace[0]
-	}
+func (c *Compound) Match(expr string) *Compound {
 	return c.Call(func(c *Command) error {
 		if c.Stdin == nil {
 			return nil
@@ -50,17 +46,62 @@ func (c *Compound) Regex(expr string, replace ...string) *Compound {
 		scanner := bufio.NewScanner(c.Stdin)
 		for scanner.Scan() {
 			line := scanner.Text()
-			if repl != "" {
-				_, err := fmt.Fprintln(c.Stdout, r.ReplaceAllString(line, repl))
+			if r.MatchString(line) {
+				_, err := fmt.Fprintln(c.Stdout, line)
 				if err != nil {
 					return err
 				}
-			} else {
-				if r.MatchString(line) {
-					_, err := fmt.Fprintln(c.Stdout, line)
-					if err != nil {
-						return err
-					}
+			}
+		}
+		return nil
+	})
+}
+
+func Replace(expr, repl string) *Compound {
+	return Do().Replace(expr, repl)
+}
+
+func (c *Compound) Replace(expr, repl string) *Compound {
+	return c.Call(func(c *Command) error {
+		if c.Stdin == nil {
+			return nil
+		}
+		r, err := regexp.Compile(expr)
+		if err != nil {
+			return err
+		}
+		scanner := bufio.NewScanner(c.Stdin)
+		for scanner.Scan() {
+			line := scanner.Text()
+			_, err := fmt.Fprintln(c.Stdout, r.ReplaceAllString(line, repl))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func MatchReplace(expr, repl string) *Compound {
+	return Do().MatchReplace(expr, repl)
+}
+
+func (c *Compound) MatchReplace(expr, repl string) *Compound {
+	return c.Call(func(c *Command) error {
+		if c.Stdin == nil {
+			return nil
+		}
+		r, err := regexp.Compile(expr)
+		if err != nil {
+			return err
+		}
+		scanner := bufio.NewScanner(c.Stdin)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if r.MatchString(line) {
+				_, err := fmt.Fprintln(c.Stdout, r.ReplaceAllString(line, repl))
+				if err != nil {
+					return err
 				}
 			}
 		}
