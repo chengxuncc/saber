@@ -11,11 +11,13 @@ func Echo(a ...interface{}) *Compound {
 
 func (c *Compound) Echo(a ...interface{}) *Compound {
 	return c.Call(func(c *Command) error {
-		_, err := io.Copy(c.Stdout, c.Stdin)
-		if err != nil {
-			return err
+		if c.Stdin != nil {
+			_, err := io.Copy(c.Stdout, c.Stdin)
+			if err != nil {
+				return err
+			}
 		}
-		_, err = fmt.Fprintln(c.Stdout, a...)
+		_, err := fmt.Fprintln(c.Stdout, a...)
 		return err
 	})
 }
@@ -27,11 +29,13 @@ func EchoN(a ...interface{}) *Compound {
 // echo without newline
 func (c *Compound) EchoN(a ...interface{}) *Compound {
 	return c.Call(func(c *Command) error {
-		_, err := io.Copy(c.Stdout, c.Stdin)
-		if err != nil {
-			return err
+		if c.Stdin != nil {
+			_, err := io.Copy(c.Stdout, c.Stdin)
+			if err != nil {
+				return err
+			}
 		}
-		_, err = fmt.Fprint(c.Stdout, a...)
+		_, err := fmt.Fprint(c.Stdout, a...)
 		return err
 	})
 }
@@ -42,12 +46,13 @@ func Printf(format string, a ...interface{}) *Compound {
 
 func (c *Compound) Printf(format string, a ...interface{}) *Compound {
 	return c.Call(func(c *Command) error {
-		_, err := io.Copy(c.Stdout, c.Stdin)
-		if err != nil {
-			return err
+		if c.Stdin != nil {
+			_, err := io.Copy(c.Stdout, c.Stdin)
+			if err != nil {
+				return err
+			}
 		}
-
-		_, err = fmt.Fprintf(c.Stdout, format, a...)
+		_, err := fmt.Fprintf(c.Stdout, format, a...)
 		return err
 	})
 }
