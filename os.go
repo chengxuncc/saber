@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/chengxuncc/saber/internal/x"
 )
 
 func Pwd() *Compound {
@@ -60,15 +62,15 @@ func To(file string) *Compound {
 
 func (c *Compound) To(file string) *Compound {
 	return c.Call(func(c *Command) error {
-		if c.Stdin != nil {
-			return errors.New("saber: Stdin is already set")
+		if c.Stdin == nil {
+			c.Stdin = &x.Buffer{}
 		}
 		f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		_, err = io.Copy(c.Stdout, f)
+		_, err = io.Copy(f, c.Stdin)
 		if err != nil {
 			return err
 		}
@@ -82,15 +84,15 @@ func Append(file string) *Compound {
 
 func (c *Compound) Append(file string) *Compound {
 	return c.Call(func(c *Command) error {
-		if c.Stdin != nil {
-			return errors.New("saber: Stdin is already set")
+		if c.Stdin == nil {
+			c.Stdin = &x.Buffer{}
 		}
 		f, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		_, err = io.Copy(c.Stdout, f)
+		_, err = io.Copy(f, c.Stdin)
 		if err != nil {
 			return err
 		}
