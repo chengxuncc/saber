@@ -45,13 +45,7 @@ func (c *Compound) Call(callable func(c *Command) error) *Compound {
 }
 
 func (c *Compound) Run() {
-	err := c.ErrorRun()
-	if err != nil {
-		x.Must(fmt.Fprintln(os.Stderr, err))
-		if c.Script.ExitOnError {
-			os.Exit(1)
-		}
-	}
+	c.check(nil, c.ErrorRun())
 }
 
 func (c *Compound) ErrorRun() error {
@@ -82,14 +76,7 @@ func (c *Compound) ErrorRun() error {
 }
 
 func (c *Compound) Output() string {
-	res, err := c.ErrorOutput()
-	if err != nil {
-		x.Must(fmt.Fprintln(os.Stderr, err))
-		if c.Script.ExitOnError {
-			os.Exit(1)
-		}
-	}
-	return res
+	return c.check(c.ErrorOutput()).(string)
 }
 
 func (c *Compound) ErrorOutput() (string, error) {
@@ -100,4 +87,26 @@ func (c *Compound) ErrorOutput() (string, error) {
 	}
 	err := c.ErrorRun()
 	return out.String(), err
+}
+
+func (c *Compound) Int() int {
+	return c.check(c.ErrorInt()).(int)
+}
+
+func (c *Compound) ErrorInt() (int, error) {
+	out, err := c.ErrorOutput()
+	if err != nil {
+		return 0, err
+	}
+	return x.Int(out)
+}
+
+func (c *Compound) check(i interface{}, err error) interface{} {
+	if err != nil {
+		x.Must(fmt.Fprintln(os.Stderr, err))
+		if c.Script.ExitOnError {
+			os.Exit(1)
+		}
+	}
+	return i
 }
