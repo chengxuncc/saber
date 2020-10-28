@@ -8,7 +8,7 @@ import (
 
 func main() {
 	Run(
-		Cmd(`go`, `version`),
+		Exec(`go`, `version`),
 	)
-	fmt.Println(Cmd(`go`, `version`).Output())
+	fmt.Println(Exec(`go`, `version`).Output())
 }
