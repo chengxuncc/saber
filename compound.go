@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/chengxuncc/saber/internal/x"
 )
@@ -99,6 +100,16 @@ func (c *Compound) ErrorInt() (int, error) {
 		return 0, err
 	}
 	return x.Int(out)
+}
+
+func (c *Compound) String() string {
+	return c.check(c.ErrorString()).(string)
+}
+
+func (c *Compound) ErrorString() (string, error) {
+	out, err := c.ErrorOutput()
+	out = strings.TrimSpace(out)
+	return out, err
 }
 
 func (c *Compound) check(i interface{}, err error) interface{} {
