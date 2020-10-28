@@ -8,8 +8,6 @@ import (
 	"github.com/chengxuncc/saber/internal/x"
 )
 
-type CommandCall func(c *Command) error
-
 type Command struct {
 	Stdin  io.ReadCloser
 	Stdout io.WriteCloser
@@ -38,6 +36,12 @@ func (c *Compound) Do() *Command {
 	}
 	c.Commands = append(c.Commands, cmd)
 	return cmd
+}
+
+func (c *Compound) Call(callable func(c *Command) error) *Compound {
+	cmd := c.Do()
+	cmd.Call = callable
+	return c
 }
 
 func (c *Compound) Run() {

@@ -10,16 +10,14 @@ func Print(a ...interface{}) *Compound {
 }
 
 func (c *Compound) Print(a ...interface{}) *Compound {
-	cmd := c.Do()
-	cmd.Call = func(c *Command) error {
+	return c.Call(func(c *Command) error {
 		_, err := io.Copy(c.Stdout, c.Stdin)
 		if err != nil {
 			return err
 		}
 		_, err = fmt.Fprint(c.Stdout, a...)
 		return err
-	}
-	return c
+	})
 }
 
 func Println(a ...interface{}) *Compound {
@@ -27,16 +25,14 @@ func Println(a ...interface{}) *Compound {
 }
 
 func (c *Compound) Println(a ...interface{}) *Compound {
-	cmd := c.Do()
-	cmd.Call = func(c *Command) error {
+	return c.Call(func(c *Command) error {
 		_, err := io.Copy(c.Stdout, c.Stdin)
 		if err != nil {
 			return err
 		}
 		_, err = fmt.Fprintln(c.Stdout, a...)
 		return err
-	}
-	return c
+	})
 }
 
 func Printf(format string, a ...interface{}) *Compound {
@@ -44,8 +40,7 @@ func Printf(format string, a ...interface{}) *Compound {
 }
 
 func (c *Compound) Printf(format string, a ...interface{}) *Compound {
-	cmd := c.Do()
-	cmd.Call = func(c *Command) error {
+	return c.Call(func(c *Command) error {
 		_, err := io.Copy(c.Stdout, c.Stdin)
 		if err != nil {
 			return err
@@ -53,6 +48,5 @@ func (c *Compound) Printf(format string, a ...interface{}) *Compound {
 
 		_, err = fmt.Fprintf(c.Stdout, format, a...)
 		return err
-	}
-	return c
+	})
 }

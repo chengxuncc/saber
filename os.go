@@ -12,16 +12,14 @@ func Pwd() *Compound {
 }
 
 func (c *Compound) Pwd() *Compound {
-	cmd := c.Do()
-	cmd.Call = func(c *Command) error {
+	return c.Call(func(c *Command) error {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
 		_, err = fmt.Fprint(c.Stdout, wd)
 		return err
-	}
-	return c
+	})
 }
 
 func Cat(file string) *Compound {
@@ -29,8 +27,7 @@ func Cat(file string) *Compound {
 }
 
 func (c *Compound) Cat(file string) *Compound {
-	cmd := c.Do()
-	cmd.Call = func(c *Command) error {
+	return c.Call(func(c *Command) error {
 		if c.Stdin != nil {
 			return errors.New("saber: Stdin is already set")
 		}
@@ -44,6 +41,5 @@ func (c *Compound) Cat(file string) *Compound {
 			return err
 		}
 		return nil
-	}
-	return c
+	})
 }

@@ -11,8 +11,7 @@ func Grep(sub string) *Compound {
 }
 
 func (c *Compound) Grep(sub string) *Compound {
-	cmd := c.Do()
-	cmd.Call = func(c *Command) error {
+	return c.Call(func(c *Command) error {
 		if c.Stdin == nil {
 			return nil
 		}
@@ -27,6 +26,5 @@ func (c *Compound) Grep(sub string) *Compound {
 			}
 		}
 		return nil
-	}
-	return c
+	})
 }
