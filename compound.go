@@ -1,6 +1,7 @@
 package saber
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -94,12 +95,19 @@ func (c *Compound) Int() int {
 	return c.check(c.ErrorInt()).(int)
 }
 
-func (c *Compound) ErrorInt() (int, error) {
+func (c *Compound) ErrorInt() (i int, err error) {
 	out, err := c.ErrorOutput()
 	if err != nil {
 		return 0, err
 	}
-	return x.Int(out)
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New(fmt.Sprint(r))
+			return
+		}
+	}()
+	i = Int(out)
+	return
 }
 
 func (c *Compound) String() string {
