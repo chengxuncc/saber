@@ -108,3 +108,30 @@ func (c *Compound) MatchReplace(expr, repl string) *Compound {
 		return nil
 	})
 }
+
+func MatchReplacen(expr, repl string) *Compound {
+	return Do().MatchReplacen(expr, repl)
+}
+
+func (c *Compound) MatchReplacen(expr, repl string) *Compound {
+	return c.Call(func(c *Command) error {
+		if c.Stdin == nil {
+			return nil
+		}
+		r, err := regexp.Compile(expr)
+		if err != nil {
+			return err
+		}
+		scanner := bufio.NewScanner(c.Stdin)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if r.MatchString(line) {
+				_, err := fmt.Fprint(c.Stdout, r.ReplaceAllString(line, repl))
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}

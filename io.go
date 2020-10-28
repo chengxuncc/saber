@@ -22,12 +22,12 @@ func (c *Compound) Echo(a ...interface{}) *Compound {
 	})
 }
 
-func EchoN(a ...interface{}) *Compound {
-	return Do().EchoN(a...)
+func Echon(a ...interface{}) *Compound {
+	return Do().Echon(a...)
 }
 
 // echo without newline
-func (c *Compound) EchoN(a ...interface{}) *Compound {
+func (c *Compound) Echon(a ...interface{}) *Compound {
 	return c.Call(func(c *Command) error {
 		if c.Stdin != nil {
 			_, err := io.Copy(c.Stdout, c.Stdin)

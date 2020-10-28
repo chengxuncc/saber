@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	Cat(`.gitignore`).EchoN().Run()
+	Cat(`.gitignore`).Echon().Run()
 	fmt.Println(Cat(`.gitignore`).Output())
 }
