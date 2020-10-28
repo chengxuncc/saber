@@ -43,3 +43,13 @@ func (c *Compound) Cat(file string) *Compound {
 		return nil
 	})
 }
+
+func Cd(dir string) *Compound {
+	return Do().Cd(dir)
+}
+
+func (c *Compound) Cd(dir string) *Compound {
+	return c.Call(func(c *Command) error {
+		return os.Chdir(dir)
+	})
+}
