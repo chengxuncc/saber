@@ -1,6 +1,8 @@
 package saber
 
 import (
+	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -45,6 +47,6 @@ func Int(i interface{}) int {
 	case []byte:
 		return x.Must(strconv.Atoi(strings.TrimSpace(string(v)))).(int)
 	default:
-		panic("unknown type to int")
+		panic(fmt.Sprintf("unsupported converting type %s to int", reflect.TypeOf(i).String()))
 	}
 }
