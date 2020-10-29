@@ -121,7 +121,7 @@ func (c *Compound) ReplaceFile(expr, repl, file string) *Compound {
 		defer src.Close()
 
 		tempFile := filepath.Join(os.TempDir(), "saber-"+x.RandString(8)+"-"+path.Base(file))
-		dst, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		dst, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			return err
 		}

@@ -65,7 +65,7 @@ func (c *Compound) To(file string) *Compound {
 		if c.Stdin == nil {
 			c.Stdin = &x.Buffer{}
 		}
-		f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			return err
 		}
@@ -100,8 +100,8 @@ func (c *Compound) Append(file string) *Compound {
 	})
 }
 
-func Mv(dst, src string) *Compound {
-	return Do().Mv(dst, src)
+func Mv(oldpath, newpath string) *Compound {
+	return Do().Mv(oldpath, newpath)
 }
 
 func (c *Compound) Mv(oldpath, newpath string) *Compound {
@@ -115,7 +115,7 @@ func (c *Compound) Mv(oldpath, newpath string) *Compound {
 			return err
 		}
 		defer src.Close()
-		dst, err := os.OpenFile(newpath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+		dst, err := os.OpenFile(newpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			return err
 		}
@@ -124,12 +124,13 @@ func (c *Compound) Mv(oldpath, newpath string) *Compound {
 		if err != nil {
 			return err
 		}
+		_ = os.Remove(oldpath)
 		return nil
 	})
 }
 
-func Cp(dst, src string) *Compound {
-	return Do().Cp(dst, src)
+func Cp(oldpath, newpath string) *Compound {
+	return Do().Cp(oldpath, newpath)
 }
 
 func (c *Compound) Cp(oldpath, newpath string) *Compound {
@@ -139,7 +140,7 @@ func (c *Compound) Cp(oldpath, newpath string) *Compound {
 			return err
 		}
 		defer src.Close()
-		dst, err := os.OpenFile(newpath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+		dst, err := os.OpenFile(newpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			return err
 		}
