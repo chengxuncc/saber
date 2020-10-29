@@ -137,6 +137,6 @@ func (c *Compound) ReplaceFile(expr, repl, file string) *Compound {
 		}
 		src.Close()
 		dst.Close()
-		return os.Rename(file, tempFile)
+		return Mv(tempFile, file).ErrorRun()
 	})
 }

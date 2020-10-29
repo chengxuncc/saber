@@ -99,3 +99,55 @@ func (c *Compound) Append(file string) *Compound {
 		return nil
 	})
 }
+
+func Mv(dst, src string) *Compound {
+	return Do().Mv(dst, src)
+}
+
+func (c *Compound) Mv(oldpath, newpath string) *Compound {
+	return c.Call(func(c *Command) error {
+		err := os.Rename(oldpath, newpath)
+		if err == nil {
+			return nil
+		}
+		src, err := os.Open(oldpath)
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+		dst, err := os.OpenFile(newpath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func Cp(dst, src string) *Compound {
+	return Do().Cp(dst, src)
+}
+
+func (c *Compound) Cp(oldpath, newpath string) *Compound {
+	return c.Call(func(c *Command) error {
+		src, err := os.Open(oldpath)
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+		dst, err := os.OpenFile(newpath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
