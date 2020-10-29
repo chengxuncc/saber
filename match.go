@@ -82,6 +82,22 @@ func (c *Compound) Replace(expr, repl string) *Compound {
 	})
 }
 
+func (c *Compound) MatchReplace(expr, repl string) *Compound {
+	return c.StreamInit(func(cmd *Command) (StringTransform, error) {
+		r, err := regexp.Compile(expr)
+		if err != nil {
+			return nil, err
+		}
+		return func(line string) (string, bool) {
+			if r.MatchString(line) {
+				return r.ReplaceAllString(line, repl), true
+			} else {
+				return "", false
+			}
+		}, nil
+	})
+}
+
 func (c *Compound) ReplaceString(old, new string) *Compound {
 	return c.Stream(func(line string) (string, bool) {
 		return strings.ReplaceAll(line, old, new), true
