@@ -15,7 +15,7 @@ import (
 type StringTransform func(line string) (newLine string, ok bool)
 
 func (c *Compound) StreamInit(init func(cmd *Command) (StringTransform, error)) *Compound {
-	return c.Call(func(c *Command) error {
+	return c.Next(func(c *Command) error {
 		if c.Stdin == nil {
 			return nil
 		}
@@ -109,7 +109,7 @@ func ReplaceFile(expr, repl, file string) *Compound {
 }
 
 func (c *Compound) ReplaceFile(expr, repl, file string) *Compound {
-	return c.Call(func(c *Command) error {
+	return c.Next(func(c *Command) error {
 		r, err := regexp.Compile(expr)
 		if err != nil {
 			return err

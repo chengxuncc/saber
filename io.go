@@ -10,7 +10,7 @@ func Echo(a ...interface{}) *Compound {
 }
 
 func (c *Compound) Echo(a ...interface{}) *Compound {
-	return c.Call(func(c *Command) error {
+	return c.Next(func(c *Command) error {
 		if c.Stdin != nil {
 			_, err := io.Copy(c.Stdout, c.Stdin)
 			if err != nil {
@@ -28,7 +28,7 @@ func Echon(a ...interface{}) *Compound {
 
 // echo without newline
 func (c *Compound) Echon(a ...interface{}) *Compound {
-	return c.Call(func(c *Command) error {
+	return c.Next(func(c *Command) error {
 		if c.Stdin != nil {
 			_, err := io.Copy(c.Stdout, c.Stdin)
 			if err != nil {
@@ -45,7 +45,7 @@ func Printf(format string, a ...interface{}) *Compound {
 }
 
 func (c *Compound) Printf(format string, a ...interface{}) *Compound {
-	return c.Call(func(c *Command) error {
+	return c.Next(func(c *Command) error {
 		if c.Stdin != nil {
 			_, err := io.Copy(c.Stdout, c.Stdin)
 			if err != nil {

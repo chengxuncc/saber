@@ -10,11 +10,13 @@ import (
 	"github.com/chengxuncc/saber/internal/x"
 )
 
+type CallFunc func(cmd *Command) error
+
 type Command struct {
-	Stdin  io.ReadCloser
-	Stdout io.WriteCloser
-	Stderr io.WriteCloser
-	Call   func(c *Command) error
+	Stdin     io.ReadCloser
+	Stdout    io.WriteCloser
+	Stderr    io.WriteCloser
+	CallStack []CallFunc
 }
 
 type Compound struct {
@@ -36,13 +38,16 @@ func (c *Compound) Do() *Command {
 			cmd.Stdin, lastCmd.Stdout = io.Pipe()
 		}
 	}
+	if cmd.Stderr == nil {
+		cmd.Stderr = os.Stderr
+	}
 	c.Commands = append(c.Commands, cmd)
 	return cmd
 }
 
-func (c *Compound) Call(callable func(c *Command) error) *Compound {
+func (c *Compound) Next(fn CallFunc) *Compound {
 	cmd := c.Do()
-	cmd.Call = callable
+	cmd.CallStack = append(cmd.CallStack, fn)
 	return c
 }
 
@@ -62,9 +67,19 @@ func (c *Compound) ErrorRun() error {
 			cmd.Stdout = os.Stdout
 		}
 		go func() {
-			errs <- cmd.Call(cmd)
-			if cmd.Stdout != os.Stdout {
-				_ = cmd.Stdout.Close()
+			var err error
+			defer func() {
+				errs <- err
+				if cmd.Stdout != os.Stdout {
+					_ = cmd.Stdout.Close()
+				}
+			}()
+			for i := len(cmd.CallStack) - 1; i >= 0; i-- {
+				fn := cmd.CallStack[i]
+				err = fn(cmd)
+				if err != nil {
+					return
+				}
 			}
 		}()
 	}
@@ -118,6 +133,15 @@ func (c *Compound) ErrorString() (string, error) {
 	out, err := c.ErrorOutput()
 	out = strings.TrimSpace(out)
 	return out, err
+}
+
+func (c *Compound) Stack(fn CallFunc) *Compound {
+	if fn == nil {
+		return c
+	}
+	cmd := c.Commands[len(c.Commands)-1]
+	cmd.CallStack = append(cmd.CallStack, fn)
+	return c
 }
 
 func (c *Compound) check(i interface{}, err error) interface{} {

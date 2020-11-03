@@ -1,8 +1,9 @@
 package saber
 
 import (
-	"github.com/mattn/go-shellwords"
 	"os/exec"
+
+	"github.com/mattn/go-shellwords"
 )
 
 func Exec(name string, arg ...string) *Compound {
@@ -10,7 +11,7 @@ func Exec(name string, arg ...string) *Compound {
 }
 
 func (c *Compound) Exec(name string, arg ...string) *Compound {
-	return c.Call(func(c *Command) error {
+	return c.Next(func(c *Command) error {
 		cmd := exec.Command(name, arg...)
 		cmd.Stdin = c.Stdin
 		cmd.Stdout = c.Stdout
@@ -24,7 +25,7 @@ func Eval(cmd string) *Compound {
 }
 
 func (c *Compound) Eval(cmd string) *Compound {
-	return c.Call(func(c *Command) error {
+	return c.Next(func(c *Command) error {
 		params, err := shellwords.Parse(cmd)
 		if err != nil {
 			return err
