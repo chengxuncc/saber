@@ -11,6 +11,7 @@ import (
 )
 
 type Compound struct {
+	Std
 	Script   *Script
 	Commands []*Command
 }
@@ -21,7 +22,10 @@ func (c *Compound) Next(fn CallFunc) *Compound {
 		Compound:  c,
 	}
 	lastCmd := c.Current()
-	if lastCmd != nil {
+	if lastCmd == nil {
+		// use compound Stdin on the first command
+		cmd.Stdin = c.Stdin
+	} else {
 		if lastCmd.Stdout != nil {
 			cmd.Stdin, lastCmd.Stdout = io.Pipe()
 		}
@@ -39,21 +43,17 @@ func (c *Compound) ErrorRun() error {
 	errs := make(chan error, count)
 	for i := 0; i < count; i++ {
 		go func(cmd *Command) {
-			if !c.Script.NullStdout && cmd.Stdout == nil {
-				cmd.Stdout = os.Stdout
+			if cmd.Stdout == nil {
+				cmd.Stdout = c.Stdout
 			}
-			if !c.Script.NullStderr && cmd.Stderr == nil {
-				cmd.Stderr = os.Stderr
+			if cmd.Stderr == nil {
+				cmd.Stderr = c.Stderr
 			}
 			var err error
 			defer func() {
 				errs <- err
-				if cmd.Stdout != os.Stdout {
-					_ = cmd.Stdout.Close()
-				}
-				if cmd.Stderr != os.Stderr {
-					_ = cmd.Stderr.Close()
-				}
+				_ = cmd.SetStdout(nil)
+				_ = cmd.SetStderr(nil)
 			}()
 			for i := 0; i < len(cmd.CallQueue); i++ {
 				err = cmd.CallQueue[i](cmd)
@@ -139,4 +139,24 @@ func (c *Compound) check(i interface{}, err error) interface{} {
 		}
 	}
 	return i
+}
+
+func Group(comps ...*Compound) *Compound {
+	return Do().Group(comps...)
+}
+
+func (c *Compound) Group(comps ...*Compound) *Compound {
+	return c.Next(func(cmd *Command) error {
+		for _, comp := range comps {
+			comp.Script = c.Script
+			comp.Stdin = cmd.Stdin
+			comp.Stdout = cmd.Stdout
+			comp.Stderr = cmd.Stderr
+			err := comp.ErrorRun()
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

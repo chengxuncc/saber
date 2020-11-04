@@ -3,7 +3,56 @@ package saber
 import (
 	"fmt"
 	"io"
+	"os"
 )
+
+type Std struct {
+	Stdin  io.ReadCloser
+	Stdout io.WriteCloser
+	Stderr io.WriteCloser
+}
+
+func (s *Std) SetStdin(stream io.ReadCloser) (err error) {
+	if s == nil {
+		return
+	}
+	if s.Stdin != nil && s.Stdin != os.Stdin {
+		err = s.Stdin.Close()
+		if err != nil {
+			return
+		}
+	}
+	s.Stdin = stream
+	return
+}
+
+func (s *Std) SetStdout(stream io.WriteCloser) (err error) {
+	if s == nil {
+		return
+	}
+	if s.Stdout != nil && s.Stdout != os.Stdout {
+		err = s.Stdout.Close()
+		if err != nil {
+			return
+		}
+	}
+	s.Stdout = stream
+	return
+}
+
+func (s *Std) SetStderr(stream io.WriteCloser) (err error) {
+	if s == nil {
+		return
+	}
+	if s.Stderr != nil && s.Stderr != os.Stderr {
+		err = s.Stderr.Close()
+		if err != nil {
+			return
+		}
+	}
+	s.Stderr = stream
+	return
+}
 
 func Echo(a ...interface{}) *Compound {
 	return Do().Echo(a...)
