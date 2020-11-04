@@ -27,6 +27,7 @@ func Cat(file string) *Compound {
 
 func (c *Compound) Cat(file string) *Compound {
 	return c.Next(func(cmd *Command) error {
+		c.Log("Cat", file)
 		f, err := os.Open(file)
 		if err != nil {
 			return err

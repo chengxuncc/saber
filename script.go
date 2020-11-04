@@ -72,9 +72,9 @@ func (s *Script) Run(comps ...*Compound) {
 	}
 }
 
-func (s *Script) Log(layer int, a ...interface{}) {
+func (s *Script) Log(layer int, name string, a ...interface{}) {
 	if s.Debug {
-		a = append([]interface{}{strings.Repeat("+", layer+1)}, a...)
+		a = append([]interface{}{strings.Repeat("+", layer+1), name}, a...)
 		fmt.Println(a...)
 	}
 }

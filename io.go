@@ -9,8 +9,9 @@ func Echo(a ...interface{}) *Compound {
 }
 
 func (c *Compound) Echo(a ...interface{}) *Compound {
-	return c.Next(func(c *Command) error {
-		_, err := fmt.Fprintln(c.GetStdout(), a...)
+	return c.Next(func(cmd *Command) error {
+		c.Log("Echo", a...)
+		_, err := fmt.Fprintln(cmd.GetStdout(), a...)
 		return err
 	})
 }

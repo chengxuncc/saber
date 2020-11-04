@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	Main.Debug = true
 	Cat(`.gitignore`).Run()
 	fmt.Println(Cat(`.gitignore`).Output())
 }

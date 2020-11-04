@@ -30,9 +30,8 @@ func (c *Compound) Next(fn CallFunc) *Compound {
 		if lastCmd.GetStdout() != nil {
 			// pipeline
 			r, w := io.Pipe()
+			x.Must(lastCmd.SetStdout(w))
 			x.Must(cmd.SetStdin(r))
-			x.Must(cmd.SetStdout(w))
-			_ = cmd.SetStdin(r)
 		}
 	}
 	c.Commands = append(c.Commands, cmd)
@@ -144,8 +143,8 @@ func (c *Compound) Stack(fn CallFunc) *Compound {
 	return c
 }
 
-func (c *Compound) Log(a ...interface{}) {
-	c.Script.Log(c.Layer, a...)
+func (c *Compound) Log(name string, a ...interface{}) {
+	c.Script.Log(c.Layer, name, a...)
 }
 
 func Group(comps ...*Compound) *Compound {
