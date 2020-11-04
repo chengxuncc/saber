@@ -5,10 +5,11 @@ var (
 )
 
 type Script struct {
-	ExitOnError   bool
-	ReturnCode    int
-	Error         error
-	DisableOutput bool
+	ExitOnError bool
+	ExitCode    int
+	Error       error
+	NullStdout  bool
+	NullStderr  bool
 }
 
 func New() *Script {
@@ -23,15 +24,13 @@ func Run(comps ...*Compound) {
 	}
 }
 
-func (s *Script) Do() *Compound {
-	comp := Do()
-	comp.Script = s
-	return comp
+func Do() *Compound {
+	return Main.Do()
 }
 
-func (s *Script) Run(comps ...*Compound) {
-	for _, comp := range comps {
-		comp.Script = s
-		comp.Run()
+func (s *Script) Do() *Compound {
+	return &Compound{
+		Script:   s,
+		Commands: make([]*Command, 0, 3),
 	}
 }

@@ -15,20 +15,14 @@ type Compound struct {
 	Commands []*Command
 }
 
-func Do() *Compound {
-	return &Compound{
-		Commands: make([]*Command, 0, 3),
-	}
-}
-
 func (c *Compound) Next(fn CallFunc) *Compound {
 	cmd := &Command{
 		CallQueue: []CallFunc{fn},
-		compound:  c,
+		Compound:  c,
 	}
-	if len(c.Commands) > 0 {
-		lastCmd := c.Commands[len(c.Commands)-1]
-		if lastCmd.Stdout == nil {
+	lastCmd := c.Current()
+	if lastCmd != nil {
+		if lastCmd.Stdout != nil {
 			cmd.Stdin, lastCmd.Stdout = io.Pipe()
 		}
 	}
@@ -41,17 +35,14 @@ func (c *Compound) Run() {
 }
 
 func (c *Compound) ErrorRun() error {
-	if c.Script == nil {
-		c.Script = Main
-	}
 	count := len(c.Commands)
 	errs := make(chan error, count)
 	for i := 0; i < count; i++ {
 		go func(cmd *Command) {
-			if cmd.Stdout == nil {
+			if !c.Script.NullStdout && cmd.Stdout == nil {
 				cmd.Stdout = os.Stdout
 			}
-			if cmd.Stderr == nil {
+			if !c.Script.NullStderr && cmd.Stderr == nil {
 				cmd.Stderr = os.Stderr
 			}
 			var err error
@@ -125,6 +116,10 @@ func (c *Compound) ErrorString() (string, error) {
 }
 
 func (c *Compound) Current() *Command {
+	length := len(c.Commands)
+	if length == 0 {
+		return nil
+	}
 	return c.Commands[len(c.Commands)-1]
 }
 

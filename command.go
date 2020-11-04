@@ -7,8 +7,7 @@ import (
 type CallFunc func(cmd *Command) error
 
 type Command struct {
-	compound *Compound
-
+	Compound  *Compound
 	Stdin     io.ReadCloser
 	Stdout    io.WriteCloser
 	Stderr    io.WriteCloser
