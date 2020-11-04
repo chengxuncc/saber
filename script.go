@@ -17,6 +17,7 @@ type Script struct {
 	NullStdout  bool
 	NullStderr  bool
 	HttpClient  *http.Client
+	Debug       bool
 }
 
 func New() *Script {
@@ -54,5 +55,12 @@ func (s *Script) Run(comps ...*Compound) {
 	for _, comp := range comps {
 		comp.Script = s
 		comp.Run()
+	}
+}
+
+func (s *Script) Log(layer int, a ...interface{}) {
+	if s.Debug {
+		a = append([]interface{}{strings.Repeat("+", layer+1)}, a...)
+		fmt.Println(a...)
 	}
 }

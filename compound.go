@@ -12,6 +12,7 @@ import (
 
 type Compound struct {
 	Std
+	Layer    int
 	Script   *Script
 	Commands []*Command
 }
@@ -147,6 +148,7 @@ func Group(comps ...*Compound) *Compound {
 
 func (c *Compound) Group(comps ...*Compound) *Compound {
 	return c.Next(func(cmd *Command) error {
+		c.Log("Group")
 		for _, comp := range comps {
 			comp.Script = c.Script
 			comp.Stdin = cmd.Stdin
