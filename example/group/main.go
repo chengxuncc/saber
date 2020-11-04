@@ -5,7 +5,5 @@ import (
 )
 
 func main() {
-	Run(
-		Cat(".gitignore").Grep(`idea`),
-	)
+	Pwd().Run()
 }

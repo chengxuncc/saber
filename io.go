@@ -45,14 +45,24 @@ func Printf(format string, a ...interface{}) *Compound {
 }
 
 func (c *Compound) Printf(format string, a ...interface{}) *Compound {
-	return c.Next(func(c *Command) error {
-		if c.Stdin != nil {
-			_, err := io.Copy(c.Stdout, c.Stdin)
+	return c.Next(func(cmd *Command) error {
+		if cmd.Stdin != nil {
+			_, err := io.Copy(cmd.Stdout, cmd.Stdin)
 			if err != nil {
 				return err
 			}
 		}
-		_, err := fmt.Fprintf(c.Stdout, format, a...)
+		_, err := fmt.Fprintf(cmd.Stdout, format, a...)
 		return err
+	})
+}
+
+func (c *Compound) Combine() *Compound {
+	return c.Queue(func(cmd *Command) error {
+		err := cmd.SetStderr(cmd.Stdout)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 }

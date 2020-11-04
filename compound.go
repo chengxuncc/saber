@@ -10,15 +10,6 @@ import (
 	"github.com/chengxuncc/saber/internal/x"
 )
 
-type CallFunc func(cmd *Command) error
-
-type Command struct {
-	Stdin     io.ReadCloser
-	Stdout    io.WriteCloser
-	Stderr    io.WriteCloser
-	CallStack []CallFunc
-}
-
 type Compound struct {
 	Script   *Script
 	Commands []*Command
@@ -30,24 +21,18 @@ func Do() *Compound {
 	}
 }
 
-func (c *Compound) Do() *Command {
-	cmd := &Command{}
+func (c *Compound) Next(fn CallFunc) *Compound {
+	cmd := &Command{
+		CallQueue: []CallFunc{fn},
+		compound:  c,
+	}
 	if len(c.Commands) > 0 {
 		lastCmd := c.Commands[len(c.Commands)-1]
 		if lastCmd.Stdout == nil {
 			cmd.Stdin, lastCmd.Stdout = io.Pipe()
 		}
 	}
-	if cmd.Stderr == nil {
-		cmd.Stderr = os.Stderr
-	}
 	c.Commands = append(c.Commands, cmd)
-	return cmd
-}
-
-func (c *Compound) Next(fn CallFunc) *Compound {
-	cmd := c.Do()
-	cmd.CallStack = append(cmd.CallStack, fn)
 	return c
 }
 
@@ -62,26 +47,30 @@ func (c *Compound) ErrorRun() error {
 	count := len(c.Commands)
 	errs := make(chan error, count)
 	for i := 0; i < count; i++ {
-		cmd := c.Commands[i]
-		if cmd.Stdout == nil {
-			cmd.Stdout = os.Stdout
-		}
-		go func() {
+		go func(cmd *Command) {
+			if cmd.Stdout == nil {
+				cmd.Stdout = os.Stdout
+			}
+			if cmd.Stderr == nil {
+				cmd.Stderr = os.Stderr
+			}
 			var err error
 			defer func() {
 				errs <- err
 				if cmd.Stdout != os.Stdout {
 					_ = cmd.Stdout.Close()
 				}
+				if cmd.Stderr != os.Stderr {
+					_ = cmd.Stderr.Close()
+				}
 			}()
-			for i := len(cmd.CallStack) - 1; i >= 0; i-- {
-				fn := cmd.CallStack[i]
-				err = fn(cmd)
+			for i := 0; i < len(cmd.CallQueue); i++ {
+				err = cmd.CallQueue[i](cmd)
 				if err != nil {
 					return
 				}
 			}
-		}()
+		}(c.Commands[i])
 	}
 	for i := 0; i < count; i++ {
 		err := <-errs
@@ -135,12 +124,15 @@ func (c *Compound) ErrorString() (string, error) {
 	return out, err
 }
 
-func (c *Compound) Stack(fn CallFunc) *Compound {
+func (c *Compound) Current() *Command {
+	return c.Commands[len(c.Commands)-1]
+}
+
+func (c *Compound) Queue(fn CallFunc) *Compound {
 	if fn == nil {
 		return c
 	}
-	cmd := c.Commands[len(c.Commands)-1]
-	cmd.CallStack = append(cmd.CallStack, fn)
+	c.Current().Queue(fn)
 	return c
 }
 

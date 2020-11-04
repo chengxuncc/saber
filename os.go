@@ -108,12 +108,10 @@ func (c *Compound) Cp(oldpath, newpath string) *Compound {
 }
 
 func (c *Compound) In(file string) *Compound {
-	return c.Stack(func(cmd *Command) error {
-		if cmd.Stdin != nil {
-			err := cmd.Stdin.Close()
-			if err != nil {
-				return err
-			}
+	return c.Queue(func(cmd *Command) error {
+		err := cmd.SetStdin(nil)
+		if err != nil {
+			return err
 		}
 		f, err := os.Open(file)
 		if err != nil {
@@ -125,12 +123,10 @@ func (c *Compound) In(file string) *Compound {
 }
 
 func (c *Compound) To(file string) *Compound {
-	return c.Stack(func(cmd *Command) error {
-		if cmd.Stdout != nil {
-			err := cmd.Stdout.Close()
-			if err != nil {
-				return err
-			}
+	return c.Queue(func(cmd *Command) error {
+		err := cmd.SetStdout(nil)
+		if err != nil {
+			return err
 		}
 		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
@@ -142,12 +138,10 @@ func (c *Compound) To(file string) *Compound {
 }
 
 func (c *Compound) App(file string) *Compound {
-	return c.Stack(func(cmd *Command) error {
-		if cmd.Stdout != nil {
-			err := cmd.Stdout.Close()
-			if err != nil {
-				return err
-			}
+	return c.Queue(func(cmd *Command) error {
+		err := cmd.SetStdout(nil)
+		if err != nil {
+			return err
 		}
 		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
@@ -159,12 +153,10 @@ func (c *Compound) App(file string) *Compound {
 }
 
 func (c *Compound) Err(file string) *Compound {
-	return c.Stack(func(cmd *Command) error {
-		if cmd.Stderr != nil {
-			err := cmd.Stderr.Close()
-			if err != nil {
-				return err
-			}
+	return c.Queue(func(cmd *Command) error {
+		err := cmd.SetStderr(nil)
+		if err != nil {
+			return err
 		}
 		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
