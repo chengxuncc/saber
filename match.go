@@ -16,19 +16,16 @@ type StringTransform func(line string) (newLine string, ok bool)
 
 func (c *Compound) StreamInit(init func(cmd *Command) (StringTransform, error)) *Compound {
 	return c.Next(func(c *Command) error {
-		if c.Stdin == nil {
-			return nil
-		}
 		transform, err := init(c)
 		if err != nil {
 			return err
 		}
-		scanner := bufio.NewScanner(c.Stdin)
+		scanner := bufio.NewScanner(c.GetStdin())
 		for scanner.Scan() {
 			line := scanner.Text()
 			newLine, ok := transform(line)
 			if ok {
-				_, err := fmt.Fprintln(c.Stdout, newLine)
+				_, err := fmt.Fprintln(c.GetStdout(), newLine)
 				if err != nil {
 					return err
 				}

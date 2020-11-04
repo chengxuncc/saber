@@ -6,7 +6,7 @@ func Must(i ...interface{}) interface{} {
 			continue
 		}
 		if err, ok := v.(error); ok && err != nil {
-			panic(err)
+			panic(err.Error())
 		}
 	}
 	for _, v := range i {

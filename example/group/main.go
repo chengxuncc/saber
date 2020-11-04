@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	Main.Debug = true
 	Group(
 		Echo("Group Run"),
 		Echo(1),

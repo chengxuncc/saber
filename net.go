@@ -16,7 +16,7 @@ func (c *Compound) Curl(url string) *Compound {
 			return err
 		}
 		defer resp.Body.Close()
-		_, err = io.Copy(c.Stdout, resp.Body)
+		_, err = io.Copy(c.GetStdout(), resp.Body)
 		if err != nil {
 			return err
 		}
@@ -42,7 +42,7 @@ func (c *Compound) Request(method, url string, hdr http.Header, body io.Reader) 
 			return err
 		}
 		defer resp.Body.Close()
-		_, err = io.Copy(c.Stdout, resp.Body)
+		_, err = io.Copy(c.GetStdout(), resp.Body)
 		if err != nil {
 			return err
 		}

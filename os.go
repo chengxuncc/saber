@@ -1,7 +1,6 @@
 package saber
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -17,7 +16,7 @@ func (c *Compound) Pwd() *Compound {
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprint(cmd.Stdout, wd)
+		_, err = fmt.Fprint(cmd.GetStdout(), wd)
 		return err
 	})
 }
@@ -28,15 +27,12 @@ func Cat(file string) *Compound {
 
 func (c *Compound) Cat(file string) *Compound {
 	return c.Next(func(cmd *Command) error {
-		if cmd.Stdin != nil {
-			return errors.New("saber: Stdin is already set")
-		}
 		f, err := os.Open(file)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		_, err = io.Copy(cmd.Stdout, f)
+		_, err = io.Copy(cmd.GetStdout(), f)
 		if err != nil {
 			return err
 		}
@@ -108,61 +104,77 @@ func (c *Compound) Cp(oldpath, newpath string) *Compound {
 }
 
 func (c *Compound) In(file string) *Compound {
-	return c.Queue(func(cmd *Command) error {
-		err := cmd.SetStdin(nil)
-		if err != nil {
-			return err
-		}
+	return c.Stack(func(cmd *Command) error {
 		f, err := os.Open(file)
 		if err != nil {
 			return err
 		}
-		cmd.Stdout = f
+		defer func() {
+			if err != nil {
+				_ = f.Close()
+			}
+		}()
+		err = cmd.SetStdin(f)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 }
 
 func (c *Compound) To(file string) *Compound {
-	return c.Queue(func(cmd *Command) error {
-		err := cmd.SetStdout(nil)
-		if err != nil {
-			return err
-		}
+	return c.Stack(func(cmd *Command) error {
 		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			return err
 		}
-		cmd.Stdout = f
+		defer func() {
+			if err != nil {
+				_ = f.Close()
+			}
+		}()
+		err = cmd.SetStdout(f)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 }
 
 func (c *Compound) App(file string) *Compound {
-	return c.Queue(func(cmd *Command) error {
-		err := cmd.SetStdout(nil)
-		if err != nil {
-			return err
-		}
+	return c.Stack(func(cmd *Command) error {
 		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			return err
 		}
-		cmd.Stdout = f
+		defer func() {
+			if err != nil {
+				_ = f.Close()
+			}
+		}()
+		err = cmd.SetStdout(f)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 }
 
 func (c *Compound) Err(file string) *Compound {
-	return c.Queue(func(cmd *Command) error {
-		err := cmd.SetStderr(nil)
-		if err != nil {
-			return err
-		}
+	return c.Stack(func(cmd *Command) error {
 		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			return err
 		}
-		cmd.Stderr = f
+		defer func() {
+			if err != nil {
+				_ = f.Close()
+			}
+		}()
+		err = cmd.SetStderr(f)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 }

@@ -5,13 +5,13 @@ type CallFunc func(cmd *Command) error
 type Command struct {
 	Std
 	Compound  *Compound
-	CallQueue []CallFunc
+	CallStack []CallFunc
 }
 
-func (c *Command) Queue(fn CallFunc) *Command {
+func (c *Command) Stack(fn CallFunc) *Command {
 	if fn == nil {
 		return c
 	}
-	c.CallQueue = append(c.CallQueue, fn)
+	c.CallStack = append(c.CallStack, fn)
 	return c
 }

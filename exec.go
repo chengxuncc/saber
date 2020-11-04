@@ -13,9 +13,9 @@ func Exec(name string, arg ...string) *Compound {
 func (c *Compound) Exec(name string, arg ...string) *Compound {
 	return c.Next(func(cmd *Command) error {
 		proc := exec.Command(name, arg...)
-		proc.Stdin = cmd.Stdin
-		proc.Stdout = cmd.Stdout
-		proc.Stderr = cmd.Stderr
+		proc.Stdin = cmd.GetStdin()
+		proc.Stdout = cmd.GetStdout()
+		proc.Stderr = cmd.GetStderr()
 		return proc.Run()
 	})
 }
@@ -34,9 +34,9 @@ func (c *Compound) Eval(shell string) *Compound {
 			return nil
 		}
 		proc := exec.Command(params[0], params[1:]...)
-		proc.Stdin = cmd.Stdin
-		proc.Stdout = cmd.Stdout
-		proc.Stderr = cmd.Stderr
+		proc.Stdin = cmd.GetStdin()
+		proc.Stdout = cmd.GetStdout()
+		proc.Stderr = cmd.GetStderr()
 		return proc.Run()
 	})
 }

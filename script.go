@@ -1,9 +1,13 @@
 package saber
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/chengxuncc/saber/internal/x"
 )
 
 var (
@@ -11,6 +15,7 @@ var (
 )
 
 type Script struct {
+	Std
 	ExitOnError bool
 	ExitCode    int
 	Error       error
@@ -21,12 +26,24 @@ type Script struct {
 }
 
 func New() *Script {
-	return &Script{
+	s := &Script{
+		Std: Std{
+			Stdin:  os.Stdin,
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+		},
 		ExitOnError: true,
 		HttpClient: &http.Client{
 			Timeout: time.Second * 5,
 		},
 	}
+	if s.NullStdout {
+		s.Stdout = x.Discard
+	}
+	if s.NullStderr {
+		s.Stderr = x.Discard
+	}
+	return s
 }
 
 func Do() *Compound {
@@ -35,14 +52,11 @@ func Do() *Compound {
 
 func (s *Script) Do() *Compound {
 	c := &Compound{
+		Std: Std{
+			Parent: &s.Std,
+		},
 		Script:   s,
 		Commands: make([]*Command, 0, 3),
-	}
-	if !s.NullStdout {
-		c.Stdout = os.Stdout
-	}
-	if !s.NullStderr {
-		c.Stderr = os.Stderr
 	}
 	return c
 }
