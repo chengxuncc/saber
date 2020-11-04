@@ -1,7 +1,9 @@
 package saber
 
 import (
+	"net/http"
 	"os"
+	"time"
 )
 
 var (
@@ -14,11 +16,15 @@ type Script struct {
 	Error       error
 	NullStdout  bool
 	NullStderr  bool
+	HttpClient  *http.Client
 }
 
 func New() *Script {
 	return &Script{
 		ExitOnError: true,
+		HttpClient: &http.Client{
+			Timeout: time.Second * 5,
+		},
 	}
 }
 

@@ -12,12 +12,12 @@ func Pwd() *Compound {
 }
 
 func (c *Compound) Pwd() *Compound {
-	return c.Next(func(c *Command) error {
+	return c.Next(func(cmd *Command) error {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprint(c.Stdout, wd)
+		_, err = fmt.Fprint(cmd.Stdout, wd)
 		return err
 	})
 }
@@ -27,8 +27,8 @@ func Cat(file string) *Compound {
 }
 
 func (c *Compound) Cat(file string) *Compound {
-	return c.Next(func(c *Command) error {
-		if c.Stdin != nil {
+	return c.Next(func(cmd *Command) error {
+		if cmd.Stdin != nil {
 			return errors.New("saber: Stdin is already set")
 		}
 		f, err := os.Open(file)
@@ -36,7 +36,7 @@ func (c *Compound) Cat(file string) *Compound {
 			return err
 		}
 		defer f.Close()
-		_, err = io.Copy(c.Stdout, f)
+		_, err = io.Copy(cmd.Stdout, f)
 		if err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func Cd(dir string) *Compound {
 }
 
 func (c *Compound) Cd(dir string) *Compound {
-	return c.Next(func(c *Command) error {
+	return c.Next(func(cmd *Command) error {
 		return os.Chdir(dir)
 	})
 }
@@ -59,7 +59,7 @@ func Mv(oldpath, newpath string) *Compound {
 }
 
 func (c *Compound) Mv(oldpath, newpath string) *Compound {
-	return c.Next(func(c *Command) error {
+	return c.Next(func(cmd *Command) error {
 		err := os.Rename(oldpath, newpath)
 		if err == nil {
 			return nil
@@ -88,7 +88,7 @@ func Cp(oldpath, newpath string) *Compound {
 }
 
 func (c *Compound) Cp(oldpath, newpath string) *Compound {
-	return c.Next(func(c *Command) error {
+	return c.Next(func(cmd *Command) error {
 		src, err := os.Open(oldpath)
 		if err != nil {
 			return err

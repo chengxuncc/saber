@@ -11,12 +11,12 @@ func Exec(name string, arg ...string) *Compound {
 }
 
 func (c *Compound) Exec(name string, arg ...string) *Compound {
-	return c.Next(func(c *Command) error {
-		cmd := exec.Command(name, arg...)
-		cmd.Stdin = c.Stdin
-		cmd.Stdout = c.Stdout
-		cmd.Stderr = c.Stderr
-		return cmd.Run()
+	return c.Next(func(cmd *Command) error {
+		proc := exec.Command(name, arg...)
+		proc.Stdin = cmd.Stdin
+		proc.Stdout = cmd.Stdout
+		proc.Stderr = cmd.Stderr
+		return proc.Run()
 	})
 }
 
@@ -24,19 +24,19 @@ func Eval(cmd string) *Compound {
 	return Do().Eval(cmd)
 }
 
-func (c *Compound) Eval(cmd string) *Compound {
-	return c.Next(func(c *Command) error {
-		params, err := shellwords.Parse(cmd)
+func (c *Compound) Eval(shell string) *Compound {
+	return c.Next(func(cmd *Command) error {
+		params, err := shellwords.Parse(shell)
 		if err != nil {
 			return err
 		}
 		if len(params) == 0 {
 			return nil
 		}
-		cmd := exec.Command(params[0], params[1:]...)
-		cmd.Stdin = c.Stdin
-		cmd.Stdout = c.Stdout
-		cmd.Stderr = c.Stderr
-		return cmd.Run()
+		proc := exec.Command(params[0], params[1:]...)
+		proc.Stdin = cmd.Stdin
+		proc.Stdout = cmd.Stdout
+		proc.Stderr = cmd.Stderr
+		return proc.Run()
 	})
 }
