@@ -12,9 +12,10 @@ import (
 
 type Compound struct {
 	Std
-	Layer    int
 	Script   *Script
 	Commands []*Command
+
+	layer int
 }
 
 func (c *Compound) Next(fn CallFunc) *Compound {
@@ -144,7 +145,7 @@ func (c *Compound) Stack(fn CallFunc) *Compound {
 }
 
 func (c *Compound) Log(name string, a ...interface{}) {
-	c.Script.Log(c.Layer, name, a...)
+	c.Script.Log(c.layer, name, a...)
 }
 
 func Group(comps ...*Compound) *Compound {
@@ -157,7 +158,7 @@ func (c *Compound) Group(comps ...*Compound) *Compound {
 		for _, comp := range comps {
 			comp.Script = c.Script
 			comp.Std.Parent = &cmd.Std
-			comp.Layer = c.Layer + 1
+			comp.layer = c.layer + 1
 			err := comp.ErrorRun()
 			if err != nil {
 				return err
