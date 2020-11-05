@@ -115,8 +115,8 @@ func (c *Compound) ReplaceString(old, new string) *Compound {
 	})
 }
 
-func ReplaceFile(expr, repl, file string) *Compound {
-	return Do().ReplaceFile(expr, repl, file)
+func ReplaceFile(expr, repl string, file ...string) *Compound {
+	return Do().ReplaceFile(expr, repl, file...)
 }
 
 func (c *Compound) ReplaceFile(expr, repl string, file ...string) *Compound {
