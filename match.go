@@ -119,35 +119,41 @@ func ReplaceFile(expr, repl, file string) *Compound {
 	return Do().ReplaceFile(expr, repl, file)
 }
 
-func (c *Compound) ReplaceFile(expr, repl, file string) *Compound {
+func (c *Compound) ReplaceFile(expr, repl string, file ...string) *Compound {
 	return c.Next(func(c *Command) error {
 		r, err := regexp.Compile(expr)
 		if err != nil {
 			return err
 		}
-		src, err := os.Open(file)
-		if err != nil {
-			return err
-		}
-		defer src.Close()
+		for _, f := range file {
+			src, err := os.Open(f)
+			if err != nil {
+				return err
+			}
 
-		tempFile := filepath.Join(os.TempDir(), "saber-"+x.RandString(8)+"-"+path.Base(file))
-		dst, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
-		if err != nil {
-			return err
-		}
-		defer dst.Close()
-
-		scanner := bufio.NewScanner(src)
-		for scanner.Scan() {
-			line := scanner.Text()
-			_, err := fmt.Fprintln(dst, r.ReplaceAllString(line, repl))
+			tempFile := filepath.Join(os.TempDir(), "saber-"+x.RandString(8)+"-"+path.Base(f))
+			dst, err := os.OpenFile(tempFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+			if err != nil {
+				src.Close()
+				return err
+			}
+			scanner := bufio.NewScanner(src)
+			for scanner.Scan() {
+				line := scanner.Text()
+				_, err := fmt.Fprintln(dst, r.ReplaceAllString(line, repl))
+				if err != nil {
+					src.Close()
+					dst.Close()
+					return err
+				}
+			}
+			src.Close()
+			dst.Close()
+			err = Mv(tempFile, f).ErrorRun()
 			if err != nil {
 				return err
 			}
 		}
-		src.Close()
-		dst.Close()
-		return Mv(tempFile, file).ErrorRun()
+		return nil
 	})
 }
