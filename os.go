@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/chengxuncc/saber/internal/x"
 )
 
 func Pwd() *Compound {
@@ -142,6 +144,12 @@ func (c *Compound) To(file string) *Compound {
 	})
 }
 
+func (c *Compound) ToDiscard() *Compound {
+	return c.Stack(func(cmd *Command) error {
+		return cmd.SetStdout(x.Discard)
+	})
+}
+
 func (c *Compound) App(file string) *Compound {
 	return c.Stack(func(cmd *Command) error {
 		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -177,5 +185,11 @@ func (c *Compound) Err(file string) *Compound {
 			return err
 		}
 		return nil
+	})
+}
+
+func (c *Compound) ErrDiscard() *Compound {
+	return c.Stack(func(cmd *Command) error {
+		return cmd.SetStderr(x.Discard)
 	})
 }
