@@ -35,17 +35,13 @@ func (c *Compound) Line(transform LineTransform) *Compound {
 	})
 }
 
-func (c *Compound) StringTransform(f func(string) (string, error)) *Compound {
+func (c *Compound) StringTransform(f func(string) string) *Compound {
 	return c.Next(func(c *Command) error {
 		b, err := ioutil.ReadAll(c.GetStdin())
 		if err != nil {
 			return err
 		}
-		text, err := f(string(b))
-		if err != nil {
-			return err
-		}
-		_, err = c.Stdout.Write([]byte(text))
+		_, err = c.Stdout.Write([]byte(f(string(b))))
 		return err
 	})
 }
