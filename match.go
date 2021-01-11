@@ -12,37 +12,8 @@ import (
 	"github.com/chengxuncc/saber/internal/x"
 )
 
-type StringTransform func(line string) (newLine string, ok bool)
-
-func (c *Compound) StreamInit(init func(cmd *Command) (StringTransform, error)) *Compound {
-	return c.Next(func(c *Command) error {
-		transform, err := init(c)
-		if err != nil {
-			return err
-		}
-		scanner := bufio.NewScanner(c.GetStdin())
-		for scanner.Scan() {
-			line := scanner.Text()
-			newLine, ok := transform(line)
-			if ok {
-				_, err := fmt.Fprintln(c.GetStdout(), newLine)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
-	})
-}
-
-func (c *Compound) Stream(transform StringTransform) *Compound {
-	return c.StreamInit(func(cmd *Command) (StringTransform, error) {
-		return transform, nil
-	})
-}
-
 func (c *Compound) Grep(sub string) *Compound {
-	return c.Stream(func(line string) (newLine string, ok bool) {
+	return c.Line(func(line string) (newLine string, ok bool) {
 		ok = strings.Contains(line, sub)
 		if ok {
 			newLine = line
@@ -52,7 +23,7 @@ func (c *Compound) Grep(sub string) *Compound {
 }
 
 func (c *Compound) Match(expr string) *Compound {
-	return c.StreamInit(func(cmd *Command) (StringTransform, error) {
+	return c.LineInit(func(cmd *Command) (LineTransform, error) {
 		r, err := regexp.Compile(expr)
 		if err != nil {
 			return nil, err
@@ -68,7 +39,7 @@ func (c *Compound) Match(expr string) *Compound {
 }
 
 func (c *Compound) Replace(expr, repl string) *Compound {
-	return c.StreamInit(func(cmd *Command) (StringTransform, error) {
+	return c.LineInit(func(cmd *Command) (LineTransform, error) {
 		r, err := regexp.Compile(expr)
 		if err != nil {
 			return nil, err
@@ -80,7 +51,7 @@ func (c *Compound) Replace(expr, repl string) *Compound {
 }
 
 func (c *Compound) MatchReplace(expr, repl string) *Compound {
-	return c.StreamInit(func(cmd *Command) (StringTransform, error) {
+	return c.LineInit(func(cmd *Command) (LineTransform, error) {
 		r, err := regexp.Compile(expr)
 		if err != nil {
 			return nil, err
@@ -96,7 +67,7 @@ func (c *Compound) MatchReplace(expr, repl string) *Compound {
 }
 
 func (c *Compound) MatchDelete(expr string) *Compound {
-	return c.StreamInit(func(cmd *Command) (StringTransform, error) {
+	return c.LineInit(func(cmd *Command) (LineTransform, error) {
 		r, err := regexp.Compile(expr)
 		if err != nil {
 			return nil, err
@@ -110,7 +81,7 @@ func (c *Compound) MatchDelete(expr string) *Compound {
 }
 
 func (c *Compound) ReplaceString(old, new string) *Compound {
-	return c.Stream(func(line string) (string, bool) {
+	return c.Line(func(line string) (string, bool) {
 		return strings.ReplaceAll(line, old, new), true
 	})
 }
